@@ -1,15 +1,20 @@
 from flask import Flask, request, jsonify, make_response
+from flask_cors import CORS, cross_origin
 import json
 import vanitynumber
+import urllib.parse
 app = Flask(__name__)
+app.config['CORS_HEADERS'] = 'Content-Type'
+CORS(app)
 
-# Ping
+# Server Ping
 @app.route('/')
 def index():
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
-
+cors = CORS(app, resources={r"/foo": {"origins": ["http://localhost:3000", "https://master.d12eqcbefovsml.amplifyapp.com"]}})
 @app.route('/validate', methods=['GET'])
+@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
 def validate():
     if 'phone_number' not in request.args:
         response = {
@@ -18,8 +23,8 @@ def validate():
         }
         return make_response(jsonify(response), 414)
 
-
     phone_number = request.args.get('phone_number')
+    phone_number = urllib.parse.unquote_plus(phone_number)
     is_valid_phone_number = vanitynumber.is_valid_phone_number(phone_number)
 
     response = {
@@ -28,8 +33,6 @@ def validate():
         'is_valid': is_valid_phone_number
     }
     return make_response(jsonify(response), 200)
-
-
 
 @app.route('/vanitynumbers', methods=['GET'])
 def generate_vanitynumbers_from_phonenumber():
@@ -98,3 +101,6 @@ def get_phonenumber_from_vanitynumber():
         'phone_number': phone_number
     }
     return make_response(jsonify(response), 200)
+
+if __name__ == '__main__':
+    my_awesome_app.run()
